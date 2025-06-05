@@ -8,6 +8,8 @@ I have like no idea what the common algorithm is, so I'm going into this complet
 
 ***IMPORTANT***: this project uses `brew` and `ffmpeg`. First install brew, then do `brew install ffmpeg`. You may need "minor" tweaks and fixes (sorry) to get this to work, but I'm sure that it won't require changing of code, only the Makefile.
 
+***IMPORTANT***: this project also uses `fftw` (the Fastest Fourier Transform in the West). Just do `brew install fftw`. The same note about "minor" tweaks and fixes applies here as well.
+
 ## Implementation
 
 From what I've gathered, I need to decode the mp3 file into pulse-code modulation (pcm) using this library called `ffmpeg`, then insert it into an algorithm called a Fast Fourier Transform (fft). This will extract its frequency data. 
