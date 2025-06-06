@@ -16,7 +16,9 @@ vector<short> ppcm(string s) {
         throw exception();
     }
     while (true) {
-        file.read((char *)&cur, sizeof(cur));
+        // PCM is 16-bit little-endian, meaning that there are *2* 8-bit segments
+        // reason for use of short, since that is a 2-byte storage format
+        file.read((char *)&cur, 2);
         if (file.eof()) break;
         v.push_back(cur);
     }
@@ -52,6 +54,9 @@ vector<double> fft(vector<short> v) {
     return ans;
 }
 
+const int MIN_SIZE = 50; // minimum size of a sample
+const int RUNS = 5; // runs of the function
+
 int main(int argc, char* argv[]) {
     string covered = argv[1];
     string used = argv[2];
@@ -60,7 +65,6 @@ int main(int argc, char* argv[]) {
     cout << "Getting frequencies...\n";
     vector<short> cov = ppcm("input/covered.pcm");
     vector<short> use = ppcm("input/used.pcm");
-    cout << "Running FFT...\n";
-    fft(cov);
+    cout << "Sizes: " << cov.size() << " " << use.size() << "\n";
     return 0;
 }
