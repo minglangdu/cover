@@ -66,5 +66,52 @@ int main(int argc, char* argv[]) {
     vector<short> cov = ppcm("input/covered.pcm");
     vector<short> use = ppcm("input/used.pcm");
     cout << "Sizes: " << cov.size() << " " << use.size() << "\n";
+    /*---------------*/
+    cout << "Preprocessing sums...\n";
+    vector<pair<int, int>> sums (use.size() - MIN_SIZE + 1);
+    vector<int> psum (cov.size() + 1, 0);
+    for (int i = 1; i <= MIN_SIZE; i ++) {
+        psum[i] = psum[i - 1] + cov[i - 1];
+    }
+    int cur = 0;
+    for (int i = 0; i < MIN_SIZE - 1; i ++) {
+        cur += use[i];
+    }
+    for (int i = MIN_SIZE - 1; i < sums.size(); i ++) {
+        int j = i - MIN_SIZE + 1;
+        cur += use[i];
+        sums[j].first = cur;
+        sums[j].second = j;
+        cur -= use[j];
+    }
+    sort(sums.begin(), sums.end());
+    // TODO: record mappings
+    cout << "Creating cover...\n";
+    int l = 0, r = l;
+    vector<short> res (cov.size());
+    while (r < cov.size()) {
+        r = min((int)cov.size(), l + MIN_SIZE);
+        int csum = psum[r + 1] - psum[l];
+        
+        int section;
+        auto higher = lower_bound(sums.begin(), sums.end(), make_pair(csum, 0));
+        if (higher == sums.begin()) {
+            section = 0;
+        } else if (higher == sums.end()) {
+            section = sums.size() - 1;
+        } else {
+            auto lower = prev(higher);
+            if (abs((*higher).first - csum) < abs((*lower).first - csum)) {
+                section = distance(sums.begin(), higher);
+            } else {
+                section = distance(sums.begin(), lower);
+            }
+        }
+        for (int i = l; i < r; i ++) {
+            res[i] = use[section + i - l];
+        }
+        l = r;
+    }
+    
     return 0;
 }
