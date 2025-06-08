@@ -6,6 +6,8 @@ This is my attempt to create a cover generating software from scratch. I hope yo
 
 ***IMPORTANT***: this project uses `brew` and `ffmpeg`. First install brew, then do `brew install ffmpeg`. You may need "minor" tweaks and fixes (sorry) to get this to work, but I'm sure that it won't require changing of code, only the Makefile.
 
+***IMPORTANT***: this project also uses `SDL2`. Use brew to `brew install SDL2`. 
+
 ## Implementation
 
 From what I've gathered, I need to decode the mp3 file into pulse-code modulation (pcm) using this library called `ffmpeg`, then read it into an array of `short`s. Since my current usage of `ffmpeg` converts the file into a 16-bit pcm, I'll use the 2-byte (or 16-bit) `short`s in a vector representing the sound wave. This will extract its frequency data. 

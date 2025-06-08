@@ -1,12 +1,18 @@
 covered := input/atsol.mp3
 used := input/dryout.mp3
 
-all: main run clean
+all: main main.o sdl.o run clean
 
-main: main.cpp
-	-g++ main.cpp -o main -std=c++11 -Wall \
+main.o sdl.o: main.cpp sdl.cpp
+	-g++ sdl.cpp -c -o sdl.o -std=c++11 \
+	-I /opt/homebrew/include
+	-g++ main.cpp -c -o main.o -std=c++11 \
+	-I /opt/homebrew/include
+
+main: main.o sdl.o
+	-g++ main.o sdl.o -o main -std=c++11 \
 	-I /opt/homebrew/include -L /opt/homebrew/lib \
-	-lfftw3 -lm
+	-lSDL2
 
 run: main
 	echo "Covering song $(covered)"
@@ -16,8 +22,10 @@ run: main
 
 clean: 
 	rm main
+	rm sdl.o
+	rm main.o
 	rm input/covered.pcm
 	rm input/used.pcm
 
-.SILENT: run clean
+.SILENT: run clean main main.o sdl.o
 .PHONY: clean run

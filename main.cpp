@@ -2,8 +2,9 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <SDL2/SDL.h>
 
-#include <fftw3.h>
+#include "sdl.h"
 
 using namespace std;
 
@@ -25,35 +26,6 @@ vector<short> ppcm(string s) {
     return v;
 }
 
-vector<double> fft(vector<short> v) {
-    int n = v.size();
-
-    fftw_complex *in, *out;
-    fftw_plan p;
-
-    // allocate complexes
-    in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n);
-    for (int i = 0; i < n; i ++) {
-        in[i][1] = 0; // no imaginary part
-        in[i][0] = (double) v[i];
-    }
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * n);
-    // create plan and execute
-    p = fftw_plan_dft_1d(n, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(p);
-    // clean
-    fftw_destroy_plan(p);
-    fftw_free(in); fftw_free(out);
-    // get output
-    vector<double> ans (n);
-    for (int i = 0; i < n; i ++) {
-        ans[i] = out[i][0];
-        if (i < 1000) cout << ans[i] << " ";
-    }
-    cout << "\n";
-    return ans;
-}
-
 const int MIN_SIZE = 50; // minimum size of a sample
 const int RUNS = 5; // runs of the function
 
@@ -70,7 +42,7 @@ int main(int argc, char* argv[]) {
     cout << "Preprocessing sums...\n";
     vector<pair<int, int>> sums (use.size() - MIN_SIZE + 1);
     vector<int> psum (cov.size() + 1, 0);
-    for (int i = 1; i <= MIN_SIZE; i ++) {
+    for (int i = 1; i <= cov.size(); i ++) {
         psum[i] = psum[i - 1] + cov[i - 1];
     }
     int cur = 0;
@@ -85,7 +57,7 @@ int main(int argc, char* argv[]) {
         cur -= use[j];
     }
     sort(sums.begin(), sums.end());
-    // TODO: record mappings
+    vector<pair<pair<int, int>, pair<int, int>>> mappings;
     cout << "Creating cover...\n";
     int l = 0, r = l;
     vector<short> res (cov.size());
@@ -110,8 +82,16 @@ int main(int argc, char* argv[]) {
         for (int i = l; i < r; i ++) {
             res[i] = use[section + i - l];
         }
+        mappings.push_back(make_pair(make_pair(l, r), make_pair(section, section + r - l)));
         l = r;
     }
-    
+    cout << "Representing as graph...\n";
+    SDLH::SoundPlot* s = new SDLH::SoundPlot("Resulting Cover", res);
+    bool quit = false;
+    while (!quit) {
+        quit = s->update();
+    }
+    delete s;
+    s = nullptr;
     return 0;
 }
