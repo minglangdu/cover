@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <SDL2/SDL.h>
+#include <random>
 
 #include "sdl.h"
 
@@ -42,7 +43,7 @@ void opcm(string s, vector<short> v) {
     }
 }
 
-const int MIN_SIZE = 50; // minimum size of a sample
+const int MIN_SIZE = 15000; // minimum size of a sample
 const int RUNS = 5; // runs of the function
 
 int main(int argc, char* argv[]) {
@@ -95,6 +96,7 @@ int main(int argc, char* argv[]) {
                 section = distance(sums.begin(), lower);
             }
         }
+        
         for (int i = l; i < r; i ++) {
             res[i] = use[section + i - l];
         }
@@ -103,7 +105,7 @@ int main(int argc, char* argv[]) {
     }
     cout << "Converting to pcm...\n";
     opcm("res.pcm", res);
-    system("ffplay  -autoexit -f s16le res.pcm");
+    system("ffplay  -autoexit -f s16le -ar 16000 res.pcm");
     cout << "Representing as graph...\n";
     SDLH::SoundPlot* s = new SDLH::SoundPlot("Resulting Cover", res);
     bool quit = false;
