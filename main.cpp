@@ -43,8 +43,9 @@ void opcm(string s, vector<short> v) {
     }
 }
 
-const int MIN_SIZE = 15000; // minimum size of a sample
+const int MIN_SIZE = 10000; // minimum size of a sample
 const int RUNS = 5; // runs of the function
+const int SAMPLE_INTERVAL = 1500;
 
 int main(int argc, char* argv[]) {
     string covered = argv[1];
@@ -57,48 +58,31 @@ int main(int argc, char* argv[]) {
     cout << "Sizes: " << cov.size() << " " << use.size() << "\n";
     /*---------------*/
     cout << "Preprocessing sums...\n";
-    vector<pair<int, int>> sums (use.size() - MIN_SIZE + 1);
-    vector<int> psum (cov.size() + 1, 0);
-    for (int i = 1; i <= cov.size(); i ++) {
-        psum[i] = psum[i - 1] + cov[i - 1];
-    }
-    int cur = 0;
-    for (int i = 0; i < MIN_SIZE - 1; i ++) {
-        cur += use[i];
-    }
-    for (int i = MIN_SIZE - 1; i < sums.size(); i ++) {
-        int j = i - MIN_SIZE + 1;
-        cur += use[i];
-        sums[j].first = cur;
-        sums[j].second = j;
-        cur -= use[j];
-    }
-    sort(sums.begin(), sums.end());
     vector<pair<pair<int, int>, pair<int, int>>> mappings;
     cout << "Creating cover...\n";
     int l = 0, r = l;
-    vector<short> res (cov.size());
+    vector<short> res (cov.size(), 0);
     while (r < cov.size()) {
-        r = min((int)cov.size(), l + MIN_SIZE);
-        int csum = psum[r + 1] - psum[l];
-        
-        int section;
-        auto higher = lower_bound(sums.begin(), sums.end(), make_pair(csum, 0));
-        if (higher == sums.begin()) {
-            section = 0;
-        } else if (higher == sums.end()) {
-            section = sums.size() - 1;
-        } else {
-            auto lower = prev(higher);
-            if (abs((*higher).first - csum) < abs((*lower).first - csum)) {
-                section = distance(sums.begin(), higher);
-            } else {
-                section = distance(sums.begin(), lower);
+        r = min((int)cov.size(), l + MIN_SIZE); // range is [l, r) (r exclusive)
+        cout << "Covering range [" << l << ", " << r << ")...\n";
+        int section = 0; long long cur = 1e18;
+        for (int j = 0; j < use.size() - MIN_SIZE + 1; j += SAMPLE_INTERVAL) {
+            pair<int, int> tem = {1e9, -1e9};
+            for (int k = 0; k < MIN_SIZE; k ++) {
+                int diff = abs((cov[l + k] - use[j + k]));
+                tem.first = min(tem.first, diff);
+                tem.second = max(tem.second, diff);
+            }
+            // cout << "try " << j << "\n";
+            if ((tem.second - tem.first) < cur) {
+                section = j;
+                cur = (tem.second - tem.first);
+                // cout << "new best: " << section << " (diff " << cur << ")\n";
             }
         }
-        
+        cout << "Best: " << section << " (diff " << cur << ")\n";
         for (int i = l; i < r; i ++) {
-            res[i] = use[section + i - l];
+            res[i] += use[section + i - l];
         }
         mappings.push_back(make_pair(make_pair(l, r), make_pair(section, section + r - l)));
         l = r;
