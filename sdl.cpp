@@ -111,7 +111,7 @@ void SDLH::SoundPlot::renderObjects() {
         // x += 500 / vals.size();
         x += 0.1;
         prev = next;
-        cout << x << " " << prev << "\n";
+        // cout << x << " " << prev << "\n";
     }
     SDL_RenderPresent(renderer);
 }

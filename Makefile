@@ -26,6 +26,7 @@ clean:
 	rm main.o
 	rm input/covered.pcm
 	rm input/used.pcm
+	rm res.pcm
 
 .SILENT: run clean main main.o sdl.o
 .PHONY: clean run

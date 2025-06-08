@@ -26,6 +26,22 @@ vector<short> ppcm(string s) {
     return v;
 }
 
+void opcm(string s, vector<short> v) {
+    cout << "Opening file " << s << "\n";
+    fstream file; file.open(s, ios::out | ios::binary);
+    if (!file.is_open()) {
+        cout << "File did not open.";
+        throw exception();
+    }
+    for (short cur : v) {
+        // PCM is 16-bit little-endian, meaning that there are *2* 8-bit segments
+        // reason for use of short, since that is a 2-byte storage format
+        file.put(cur & 255); // 255 = ~(1 << 8)
+        cur >>= 8;
+        file.put(cur & 255);
+    }
+}
+
 const int MIN_SIZE = 50; // minimum size of a sample
 const int RUNS = 5; // runs of the function
 
@@ -85,6 +101,9 @@ int main(int argc, char* argv[]) {
         mappings.push_back(make_pair(make_pair(l, r), make_pair(section, section + r - l)));
         l = r;
     }
+    cout << "Converting to pcm...\n";
+    opcm("res.pcm", res);
+    system("ffplay  -autoexit -f s16le res.pcm");
     cout << "Representing as graph...\n";
     SDLH::SoundPlot* s = new SDLH::SoundPlot("Resulting Cover", res);
     bool quit = false;
