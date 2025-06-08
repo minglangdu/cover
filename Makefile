@@ -1,5 +1,8 @@
-covered := input/atsol.mp3
-used := input/dryout.mp3
+# covered := input/atsol.mp3
+# used := input/dryout.mp3
+
+covered := input/stalemate.mp3
+used := input/atsol.mp3
 
 all: main main.o sdl.o run clean
 

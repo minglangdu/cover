@@ -43,9 +43,10 @@ void opcm(string s, vector<short> v) {
     }
 }
 
-const int MIN_SIZE = 10000; // minimum size of a sample
-const int RUNS = 5; // runs of the function
-const int SAMPLE_INTERVAL = 1500;
+const int MIN_SIZE = 7500; // minimum size of a sample
+const int RUNS = 15; // runs of the function
+const int SAMPLE_INTERVAL = 150;
+const int CUTOFF = 100000;
 
 int main(int argc, char* argv[]) {
     string covered = argv[1];
@@ -60,36 +61,40 @@ int main(int argc, char* argv[]) {
     cout << "Preprocessing sums...\n";
     vector<pair<pair<int, int>, pair<int, int>>> mappings;
     cout << "Creating cover...\n";
-    int l = 0, r = l;
     vector<short> res (cov.size(), 0);
-    while (r < cov.size()) {
-        r = min((int)cov.size(), l + MIN_SIZE); // range is [l, r) (r exclusive)
-        cout << "Covering range [" << l << ", " << r << ")...\n";
-        int section = 0; long long cur = 1e18;
-        for (int j = 0; j < use.size() - MIN_SIZE + 1; j += SAMPLE_INTERVAL) {
-            pair<int, int> tem = {1e9, -1e9};
-            for (int k = 0; k < MIN_SIZE; k ++) {
-                int diff = abs((cov[l + k] - use[j + k]));
-                tem.first = min(tem.first, diff);
-                tem.second = max(tem.second, diff);
+    for (int run = 0; run < RUNS; run ++) {
+        cout << "run " << run << "\n";
+        int l = 0, r = l;
+        for (int i = 0; i < 100; i ++) cout << res[i] << "\n";
+        while (r < CUTOFF) {
+            r = min((int)cov.size(), l + MIN_SIZE); // range is [l, r) (r exclusive)
+            cout << "Covering range [" << l << ", " << r << ")...\n";
+            int section = 0; long long cur = 1e18;
+            for (int j = 0; j < use.size() - MIN_SIZE + 1; j += SAMPLE_INTERVAL) {
+                pair<int, int> tem = {1e9, -1e9};
+                for (int k = 0; k < MIN_SIZE; k ++) {
+                    int diff = abs((cov[l + k] - (use[j + k] + res[j + k])));
+                    tem.first = min(tem.first, diff);
+                    tem.second = max(tem.second, diff);
+                }
+                // cout << "try " << j << "\n";
+                if ((tem.second - tem.first) < cur) {
+                    section = j;
+                    cur = (tem.second - tem.first);
+                    // cout << "new best: " << section << " (diff " << cur << ")\n";
+                }
             }
-            // cout << "try " << j << "\n";
-            if ((tem.second - tem.first) < cur) {
-                section = j;
-                cur = (tem.second - tem.first);
-                // cout << "new best: " << section << " (diff " << cur << ")\n";
+            cout << "Best: " << section << " (diff " << cur << ")\n";
+            for (int i = l; i < r; i ++) {
+                res[i] += use[section + i - l];
             }
+            mappings.push_back(make_pair(make_pair(l, r), make_pair(section, section + r - l)));
+            l = r;
         }
-        cout << "Best: " << section << " (diff " << cur << ")\n";
-        for (int i = l; i < r; i ++) {
-            res[i] += use[section + i - l];
-        }
-        mappings.push_back(make_pair(make_pair(l, r), make_pair(section, section + r - l)));
-        l = r;
+        cout << "Converting to pcm...\n";
+        opcm("res.pcm", res);
+        system("ffplay  -autoexit -f s16le -ar 16000 res.pcm");
     }
-    cout << "Converting to pcm...\n";
-    opcm("res.pcm", res);
-    system("ffplay  -autoexit -f s16le -ar 16000 res.pcm");
     cout << "Representing as graph...\n";
     SDLH::SoundPlot* s = new SDLH::SoundPlot("Resulting Cover", res);
     bool quit = false;
